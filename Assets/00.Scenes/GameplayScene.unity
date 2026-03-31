@@ -677,6 +677,7 @@ GameObject:
   - component: {fileID: 574266741}
   - component: {fileID: 574266742}
   - component: {fileID: 574266743}
+  - component: {fileID: 574266744}
   m_Layer: 6
   m_Name: Player
   m_TagString: Untagged
@@ -736,6 +737,28 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   joystick: {fileID: 667212107}
   rotateSpeed: 720
+--- !u!114 &574266744
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 574266740}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7c7908d5d3266dc4d9879838fb67b619, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  carriableMask:
+    serializedVersion: 2
+    m_Bits: 256
+  pickupRadius: 1.25
+  pickupInterval: 0.05
+  capacity: 6
+  backwardBaseOffset: 0.6
+  forwardBaseOffset: 0.6
+  laneLateralOffset: 0
+  baseHeight: 0.5
 --- !u!1 &602059250
 GameObject:
   m_ObjectHideFlags: 0
