@@ -3,9 +3,9 @@ using UnityEngine;
 
 public enum StorageLayoutType
 {
-    SingleVertical,     // 한 자리에서 위로만
-    TwoColumnsVertical, // 광석 2자리
-    Rect6Grid           // 돈 6칸
+    SingleVertical,
+    TwoColumnsVertical,
+    Rect6Grid
 }
 
 public class ItemStorage : MonoBehaviour
@@ -19,6 +19,10 @@ public class ItemStorage : MonoBehaviour
     [SerializeField] private StorageLayoutType layoutType;
     [SerializeField] private Vector3 itemEulerRotation = Vector3.zero;
     [SerializeField] private Vector3 cellSpacing = new Vector3(0.4f, 0.25f, 0.4f);
+
+    [Header("Stored Item State")]
+    [SerializeField] private Carriable.State storedState = Carriable.State.Stored;
+    [SerializeField] private bool storedUsePhysics = false;
 
     private readonly List<Carriable> storedItems = new();
 
@@ -66,6 +70,18 @@ public class ItemStorage : MonoBehaviour
         return Vector3.zero;
     }
 
+    public Vector3 GetNextWorldPosition()
+    {
+        Transform root = layoutRoot != null ? layoutRoot : transform;
+        return root.TransformPoint(GetLocalPosition(storedItems.Count));
+    }
+
+    public Quaternion GetStoredWorldRotation()
+    {
+        Transform root = layoutRoot != null ? layoutRoot : transform;
+        return root.rotation * Quaternion.Euler(itemEulerRotation);
+    }
+
     public bool CanStore(Carriable item)
     {
         if (item == null) return false;
@@ -109,7 +125,7 @@ public class ItemStorage : MonoBehaviour
             Vector3 localPos = GetLocalPosition(i);
             Vector3 localEuler = itemEulerRotation;
 
-            item.Taken(root, localPos, localEuler, false);
+            item.Taken(root, localPos, localEuler, storedUsePhysics, storedState);
         }
     }
 }

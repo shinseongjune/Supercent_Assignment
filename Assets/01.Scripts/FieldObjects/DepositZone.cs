@@ -1,5 +1,6 @@
 using UnityEngine;
 
+// Inventory에서 ItemStorage로 아이템을 옮겨주는 장소
 public class DepositZone : MonoBehaviour
 {
     [SerializeField] private ItemStorage targetStorage;
@@ -33,7 +34,7 @@ public class DepositZone : MonoBehaviour
 
         if (!targetStorage.TryStore(item))
         {
-            // 실패하면 다시 되돌리는 로직을 나중에 넣을 수 있음
+            currentInventory.Take(item);
             return;
         }
     }

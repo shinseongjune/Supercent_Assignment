@@ -1,6 +1,13 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[System.Serializable]
+public class ItemCapacityEntry
+{
+    public Carriable.Type type;
+    public int capacity = 1;
+}
+
 public class Inventory : MonoBehaviour
 {
     [Header("Pickup")]
@@ -8,14 +15,14 @@ public class Inventory : MonoBehaviour
     [SerializeField] private float pickupRadius = 1.25f;
     [SerializeField] private float pickupInterval = 0.05f;
 
-    [Header("Capacity")]
-    [SerializeField] private int capacity = 6;
-
     [Header("Stack Layout")]
     [SerializeField] private float backwardBaseOffset = 0.6f;
     [SerializeField] private float forwardBaseOffset = 0.6f;
     [SerializeField] private float laneLateralOffset = 0f;
     [SerializeField] private float baseHeight = 0.5f;
+
+    [Header("Capacity By Type")]
+    [SerializeField] private ItemCapacityEntry[] capacities;
 
     private readonly List<Carriable> items = new();
     private readonly Collider[] pickupBuffer = new Collider[32];
@@ -25,9 +32,6 @@ public class Inventory : MonoBehaviour
 
     private readonly Dictionary<Carriable, int> insertionOrders = new();
 
-    public int Capacity => capacity;
-    public int Count => items.Count;
-    public bool IsFull => items.Count >= capacity;
     public IReadOnlyList<Carriable> Items => items;
 
     private void Update()
@@ -40,11 +44,49 @@ public class Inventory : MonoBehaviour
         TryAutoPickup();
     }
 
+    public int GetCapacity(Carriable.Type type)
+    {
+        for (int i = 0; i < capacities.Length; i++)
+        {
+            if (capacities[i].type == type)
+                return Mathf.Max(0, capacities[i].capacity);
+        }
+
+        return 0;
+    }
+
+    public int GetCount(Carriable.Type type)
+    {
+        int count = 0;
+
+        for (int i = 0; i < items.Count; i++)
+        {
+            if (items[i].type == type)
+                count++;
+        }
+
+        return count;
+    }
+
+    public bool IsFull(Carriable.Type type)
+    {
+        return GetCount(type) >= GetCapacity(type);
+    }
+
+    public void SetCapacity(Carriable.Type type, int newCapacity)
+    {
+        for (int i = 0; i < capacities.Length; i++)
+        {
+            if (capacities[i].type == type)
+            {
+                capacities[i].capacity = Mathf.Max(0, newCapacity);
+                return;
+            }
+        }
+    }
+
     private void TryAutoPickup()
     {
-        if (IsFull)
-            return;
-
         int hitCount = Physics.OverlapSphereNonAlloc(
             transform.position,
             pickupRadius,
@@ -89,15 +131,41 @@ public class Inventory : MonoBehaviour
         if (item == null)
             return false;
 
-        if (IsFull)
+        if (items.Contains(item))
+            return false;
+
+        if (item.state != Carriable.State.Grounded)
+            return false;
+
+        if (IsFull(item.type))
+            return false;
+
+        return true;
+    }
+
+    public bool CanReceiveFromZone(Carriable item)
+    {
+        if (item == null)
             return false;
 
         if (items.Contains(item))
             return false;
 
-        if (item.state != Carriable.State.Grounded && item.state != Carriable.State.Disposed)
+        if (IsFull(item.type))
             return false;
 
+        return true;
+    }
+
+    public bool TryReceiveFromZone(Carriable item)
+    {
+        if (!CanReceiveFromZone(item))
+            return false;
+
+        items.Add(item);
+        insertionOrders[item] = orderCounter++;
+        SortItems();
+        RefreshCarryLayout(item);
         return true;
     }
 
@@ -158,11 +226,6 @@ public class Inventory : MonoBehaviour
         }
 
         return false;
-    }
-
-    public void SetCapacity(int newCapacity)
-    {
-        capacity = Mathf.Max(0, newCapacity);
     }
 
     private void SortItems()

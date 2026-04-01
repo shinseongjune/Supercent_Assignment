@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -49,14 +50,23 @@ public class FloatingJoystickController : MonoBehaviour
 
     private void OnEnable()
     {
-        if (InputManager.Instance != null)
-        {
-            InputManager.Instance.OnGameplayInput += HandleInput;
-            InputManager.Instance.OnUIInput += HandleInput;
-        }
+        StartCoroutine(SubscribeWhenReady());
+    }
 
-        if (GameManager.Instance != null)
-            GameManager.Instance.OnInputModeChanged += HandleInputModeChanged;
+    private IEnumerator SubscribeWhenReady()
+    {
+        // InputManager가 생성될 때까지 대기
+        while (InputManager.Instance == null)
+            yield return null;
+
+        InputManager.Instance.OnGameplayInput += HandleInput;
+        InputManager.Instance.OnUIInput += HandleInput;
+
+        // GameManager가 생성될 때까지 대기
+        while (GameManager.Instance != null)
+            yield return null;
+
+        GameManager.Instance.OnInputModeChanged += HandleInputModeChanged;
     }
 
     private void OnDisable()

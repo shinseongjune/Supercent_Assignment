@@ -6,7 +6,7 @@ public class Carriable : MonoBehaviour
     public enum Type
     {
         Ore,
-        HandCuffs,
+        Handcuff,
         Money,
     }
 
@@ -15,7 +15,7 @@ public class Carriable : MonoBehaviour
         Grounded,
         Carried,
         Moving,
-        Disposed,
+        Stored,
         Removing,
     }
 
@@ -38,7 +38,7 @@ public class Carriable : MonoBehaviour
     
     public float VerticalStackSpacing => verticalStackSpacing;
 
-    public State state { get; private set; } = State.Grounded;
+    public State state = State.Grounded;
     public int CarryPriority => carryPriority;
     public float StackSpacing => stackSpacing;
     public Vector3 CarriedEulerRotation
@@ -54,7 +54,7 @@ public class Carriable : MonoBehaviour
                 case Type.Money:
                     return new Vector3(0f, 90f, 0f);
 
-                case Type.HandCuffs:
+                case Type.Handcuff:
                 default:
                     return carriedEulerRotation;
             }
@@ -112,7 +112,7 @@ public class Carriable : MonoBehaviour
         }
     }
 
-    public void Taken(Transform owner, Vector3 relativePos, Vector3 eulerRotation, bool playPulse = false)
+    public void Taken(Transform owner, Vector3 relativePos, Vector3 eulerRotation, bool playPulse = false, State nextState = State.Carried)
     {
         ownerTransform = owner;
         relativePosition = relativePos;
@@ -126,7 +126,7 @@ public class Carriable : MonoBehaviour
         }
 
         StopMoveCoroutine();
-        moveCoroutine = StartCoroutine(Coroutine_MoveTo(owner, relativePos, eulerRotation, State.Carried, playPulse));
+        moveCoroutine = StartCoroutine(Coroutine_MoveTo(owner, relativePos, eulerRotation, nextState, playPulse));
     }
 
     public void Released(Vector3 position, Vector3 eulerRotation)
@@ -136,7 +136,7 @@ public class Carriable : MonoBehaviour
         relativeEulerRotation = Vector3.zero;
 
         StopMoveCoroutine();
-        moveCoroutine = StartCoroutine(Coroutine_MoveTo(position, eulerRotation, State.Disposed));
+        moveCoroutine = StartCoroutine(Coroutine_MoveTo(position, eulerRotation, State.Stored));
     }
 
     public void SetGrounded()

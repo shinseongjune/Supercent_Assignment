@@ -1,9 +1,10 @@
 using UnityEngine;
 using UnityEngine.Events;
 
+// 돈을 소모하는 장소
 public class MoneyConsumerZone : MonoBehaviour
 {
-    [SerializeField] private int targetCost = 10;
+    [SerializeField] private int targetCost = 10; // 아이템 1개 당 5원
     [SerializeField] private float consumeInterval = 0.1f;
     [SerializeField] private UnityEvent onCompleted;
 

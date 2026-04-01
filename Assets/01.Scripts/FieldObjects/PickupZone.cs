@@ -1,5 +1,6 @@
 using UnityEngine;
 
+// ItemStorage에서 Inventory로 아이템을 옮겨주는 장소
 public class PickupZone : MonoBehaviour
 {
     [SerializeField] private ItemStorage sourceStorage;
@@ -24,15 +25,17 @@ public class PickupZone : MonoBehaviour
 
     private void TryTransferOne()
     {
-        if (currentInventory.IsFull)
+        if (sourceStorage.IsEmpty)
+            return;
+
+        if (currentInventory.IsFull(sourceStorage.AcceptedType))
             return;
 
         if (!sourceStorage.TryTakeLast(out Carriable item))
             return;
 
-        if (!currentInventory.Take(item))
+        if (!currentInventory.TryReceiveFromZone(item))
         {
-            // 실패 시 storage로 되돌리는 처리 가능
             sourceStorage.TryStore(item);
         }
     }
