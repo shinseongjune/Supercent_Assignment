@@ -10,16 +10,15 @@ public class PrisonerAI : MonoBehaviour
         MoveToQueueSlot,
         WaitInQueue,
         MoveToMoneyDrop,
-        MoveToPrisonGate,
+        MoveToPrisonFront,
+        WaitAtPrisonFront,
         MoveToPrisonInside,
-        PrisonIdle,
-        Finished
+        PrisonIdle
     }
 
     [Header("References")]
     [SerializeField] private PrisonerQueue queue;
-    [SerializeField] private Transform prisonGatePosition;
-    [SerializeField] private Transform prisonInsidePosition;
+    [SerializeField] private PrisonManager prisonManager;
     [SerializeField] private Transform moneyDropPosition;
     [SerializeField] private ItemStorage moneyStorage;
     [SerializeField] private Carriable moneyPrefab;
@@ -37,42 +36,37 @@ public class PrisonerAI : MonoBehaviour
     [SerializeField] private float moneyFlyDuration = 0.3f;
     [SerializeField] private AnimationCurve moneyFlyHeightCurve;
 
-    [Header("Prison Idle")]
-    [SerializeField] private bool enableCollisionWhenPrisoned = true;
-
     private NPCMovement movement;
     private NavMeshAgent agent;
     private Rigidbody[] rigidbodies;
-    private Collider[] colliders;
     private PrisonerGenerator ownerGenerator;
 
     private State state = State.EnterQueue;
 
     private Transform currentQueueSlot;
-    private int currentQueueSlotIndex = -1;
     private bool registeredToQueue = false;
 
     private int currentHandcuffCount = 0;
     private bool convertedToPrisoner = false;
     private bool isDepositingMoney = false;
-
     private bool generatorReleased = false;
+
+    private Transform assignedPrisonInsideSlot;
+    private int assignedInsideSlotIndex = -1;
 
     public bool NeedsHandcuff => currentHandcuffCount < handcuffDemand;
     public bool IsReadyForHandoff => state == State.WaitInQueue && queue != null && queue.IsFront(this);
-    public int CurrentHandcuffCount => currentHandcuffCount;
-    public int HandcuffDemand => handcuffDemand;
     public Transform HandoffTarget => handoffTarget != null ? handoffTarget : transform;
+    public int AssignedInsideSlotIndex => assignedInsideSlotIndex;
 
     private void Awake()
     {
         movement = GetComponent<NPCMovement>();
         agent = GetComponent<NavMeshAgent>();
         rigidbodies = GetComponentsInChildren<Rigidbody>(true);
-        colliders = GetComponentsInChildren<Collider>(true);
 
         ApplyRandomNormalVisual();
-        SetPrisonCollisionActive(false);
+        SetPrisonRigidbodiesActive(false);
     }
 
     private void Update()
@@ -82,16 +76,14 @@ public class PrisonerAI : MonoBehaviour
 
     public void Initialize(
         PrisonerQueue targetQueue,
-        Transform gatePosition,
-        Transform prisonPosition,
+        PrisonManager targetPrisonManager,
         Transform moneyDrop,
         ItemStorage targetMoneyStorage,
         Carriable targetMoneyPrefab,
         PrisonerGenerator generator)
     {
         queue = targetQueue;
-        prisonGatePosition = gatePosition;
-        prisonInsidePosition = prisonPosition;
+        prisonManager = targetPrisonManager;
         moneyDropPosition = moneyDrop;
         moneyStorage = targetMoneyStorage;
         moneyPrefab = targetMoneyPrefab;
@@ -100,7 +92,6 @@ public class PrisonerAI : MonoBehaviour
 
     public void AssignQueueSlot(int slotIndex, Transform slot)
     {
-        currentQueueSlotIndex = slotIndex;
         currentQueueSlot = slot;
 
         if (currentQueueSlot == null || movement == null)
@@ -144,15 +135,16 @@ public class PrisonerAI : MonoBehaviour
         }
     }
 
-    private void ReleaseGeneratorSlot()
+    public void MoveFromFrontToPrisonInside(Transform slot, int slotIndex)
     {
-        if (generatorReleased)
+        assignedPrisonInsideSlot = slot;
+        assignedInsideSlotIndex = slotIndex;
+
+        if (assignedPrisonInsideSlot == null || movement == null)
             return;
 
-        generatorReleased = true;
-
-        if (ownerGenerator != null)
-            ownerGenerator.NotifyPrisonerRemoved();
+        movement.SetDestination(assignedPrisonInsideSlot.position);
+        state = State.MoveToPrisonInside;
     }
 
     private void Think()
@@ -162,29 +154,25 @@ public class PrisonerAI : MonoBehaviour
             case State.EnterQueue:
                 UpdateEnterQueue();
                 break;
-
             case State.MoveToQueueSlot:
                 UpdateMoveToQueueSlot();
                 break;
-
             case State.WaitInQueue:
                 UpdateWaitInQueue();
                 break;
-
             case State.MoveToMoneyDrop:
                 UpdateMoveToMoneyDrop();
                 break;
-
-            case State.MoveToPrisonGate:
-                UpdateMoveToPrisonGate();
+            case State.MoveToPrisonFront:
+                UpdateMoveToPrisonFront();
                 break;
-
+            case State.WaitAtPrisonFront:
+                UpdateWaitAtPrisonFront();
+                break;
             case State.MoveToPrisonInside:
                 UpdateMoveToPrisonInside();
                 break;
-
             case State.PrisonIdle:
-            case State.Finished:
                 break;
         }
     }
@@ -194,17 +182,8 @@ public class PrisonerAI : MonoBehaviour
         if (queue == null)
             return;
 
-        if (registeredToQueue)
-        {
-            if (currentQueueSlot != null)
-            {
-                movement.SetDestination(currentQueueSlot.position);
-                state = State.MoveToQueueSlot;
-            }
-            return;
-        }
-
-        registeredToQueue = queue.TryRegister(this);
+        if (!registeredToQueue)
+            registeredToQueue = queue.TryRegister(this);
 
         if (registeredToQueue && currentQueueSlot != null)
         {
@@ -221,7 +200,6 @@ public class PrisonerAI : MonoBehaviour
         if (!movement.HasReachedDestination())
             return;
 
-        // 회전 강제 없음. 도착하면 바로 대기.
         state = State.WaitInQueue;
     }
 
@@ -230,12 +208,10 @@ public class PrisonerAI : MonoBehaviour
         if (currentQueueSlot == null)
             return;
 
-        // 앞사람이 빠져 슬롯 재배정되면 바로 이동
         if (Vector3.Distance(transform.position, currentQueueSlot.position) > 0.2f)
         {
             movement.SetDestination(currentQueueSlot.position);
             state = State.MoveToQueueSlot;
-            return;
         }
     }
 
@@ -243,7 +219,7 @@ public class PrisonerAI : MonoBehaviour
     {
         if (moneyDropPosition == null)
         {
-            GoToPrisonGate();
+            MoveToPrisonFront();
             return;
         }
 
@@ -259,11 +235,10 @@ public class PrisonerAI : MonoBehaviour
     private IEnumerator DepositMoneySequence()
     {
         isDepositingMoney = true;
-
         yield return StartCoroutine(FlyMoneyToStorage());
-
         isDepositingMoney = false;
-        GoToPrisonGate();
+
+        MoveToPrisonFront();
     }
 
     private IEnumerator FlyMoneyToStorage()
@@ -300,9 +275,7 @@ public class PrisonerAI : MonoBehaviour
 
             Collider[] moneyColliders = money.GetComponentsInChildren<Collider>();
             for (int c = 0; c < moneyColliders.Length; c++)
-            {
                 moneyColliders[c].enabled = false;
-            }
 
             float elapsed = 0f;
             while (elapsed < moneyFlyDuration)
@@ -311,8 +284,8 @@ public class PrisonerAI : MonoBehaviour
                 float t = Mathf.Clamp01(elapsed / moneyFlyDuration);
 
                 Vector3 pos = Vector3.Lerp(startPos, targetPos, t);
-
                 float arc = 0f;
+
                 if (moneyFlyHeightCurve != null && moneyFlyHeightCurve.length > 0)
                     arc = moneyFlyHeightCurve.Evaluate(t);
 
@@ -331,9 +304,21 @@ public class PrisonerAI : MonoBehaviour
         }
     }
 
-    private void UpdateMoveToPrisonGate()
+    private void MoveToPrisonFront()
     {
-        if (prisonGatePosition == null)
+        if (prisonManager == null || prisonManager.FrontPoint == null)
+        {
+            EnterPrisonIdleState();
+            return;
+        }
+
+        movement.SetDestination(prisonManager.FrontPoint.position);
+        state = State.MoveToPrisonFront;
+    }
+
+    private void UpdateMoveToPrisonFront()
+    {
+        if (prisonManager == null || prisonManager.FrontPoint == null)
         {
             EnterPrisonIdleState();
             return;
@@ -342,19 +327,52 @@ public class PrisonerAI : MonoBehaviour
         if (!movement.HasReachedDestination())
             return;
 
-        if (prisonInsidePosition == null)
+        TryEnterPrisonFromFront();
+    }
+
+    private void UpdateWaitAtPrisonFront()
+    {
+        if (prisonManager == null)
+            return;
+
+        if (prisonManager.HasFreeCell())
+        {
+            TryEnterPrisonFromFront();
+            return;
+        }
+
+        if (prisonManager.FrontPoint != null &&
+            Vector3.Distance(transform.position, prisonManager.FrontPoint.position) > 0.2f)
+        {
+            movement.SetDestination(prisonManager.FrontPoint.position);
+            state = State.MoveToPrisonFront;
+        }
+    }
+
+    private void TryEnterPrisonFromFront()
+    {
+        if (prisonManager == null)
         {
             EnterPrisonIdleState();
             return;
         }
 
-        movement.SetDestination(prisonInsidePosition.position);
-        state = State.MoveToPrisonInside;
+        if (prisonManager.TryReserveInsideSlot(this, out Transform insideSlot, out int slotIndex))
+        {
+            MoveFromFrontToPrisonInside(insideSlot, slotIndex);
+            return;
+        }
+
+        prisonManager.NotifyWaitingAtFront(this);
+        state = State.WaitAtPrisonFront;
+
+        if (movement != null)
+            movement.Stop();
     }
 
     private void UpdateMoveToPrisonInside()
     {
-        if (prisonInsidePosition == null)
+        if (assignedPrisonInsideSlot == null)
         {
             EnterPrisonIdleState();
             return;
@@ -362,6 +380,9 @@ public class PrisonerAI : MonoBehaviour
 
         if (!movement.HasReachedDestination())
             return;
+
+        if (prisonManager != null)
+            prisonManager.ConfirmEntered(this, assignedInsideSlotIndex);
 
         EnterPrisonIdleState();
     }
@@ -417,7 +438,6 @@ public class PrisonerAI : MonoBehaviour
         }
 
         currentQueueSlot = null;
-        currentQueueSlotIndex = -1;
     }
 
     private void GoToNextProcessedStep()
@@ -429,21 +449,19 @@ public class PrisonerAI : MonoBehaviour
         }
         else
         {
-            GoToPrisonGate();
+            MoveToPrisonFront();
         }
     }
 
-    private void GoToPrisonGate()
+    private void ReleaseGeneratorSlot()
     {
-        if (prisonGatePosition != null)
-        {
-            movement.SetDestination(prisonGatePosition.position);
-            state = State.MoveToPrisonGate;
-        }
-        else
-        {
-            EnterPrisonIdleState();
-        }
+        if (generatorReleased)
+            return;
+
+        generatorReleased = true;
+
+        if (ownerGenerator != null)
+            ownerGenerator.NotifyPrisonerRemoved();
     }
 
     private void EnterPrisonIdleState()
@@ -454,7 +472,10 @@ public class PrisonerAI : MonoBehaviour
         state = State.PrisonIdle;
 
         if (movement != null)
+        {
             movement.Stop();
+            movement.enabled = false;
+        }
 
         if (agent != null)
         {
@@ -462,52 +483,38 @@ public class PrisonerAI : MonoBehaviour
             agent.enabled = false;
         }
 
-        if (movement != null)
-            movement.enabled = false;
-
-        SetPrisonCollisionActive(enableCollisionWhenPrisoned);
-
+        SetPrisonRigidbodiesActive(true);
         enabled = false;
     }
 
-    private void SetPrisonCollisionActive(bool active)
+    private void SetPrisonRigidbodiesActive(bool active)
     {
-        if (colliders != null)
+        if (rigidbodies == null)
+            return;
+
+        for (int i = 0; i < rigidbodies.Length; i++)
         {
-            for (int i = 0; i < colliders.Length; i++)
+            Rigidbody rb = rigidbodies[i];
+            if (rb == null)
+                continue;
+
+            rb.isKinematic = !active;
+            if (active)
             {
-                Collider col = colliders[i];
-                if (col == null)
-                    continue;
-
-                if (col.isTrigger)
-                    continue;
-
-                col.enabled = active;
-            }
-        }
-
-        if (rigidbodies != null)
-        {
-            for (int i = 0; i < rigidbodies.Length; i++)
-            {
-                Rigidbody rb = rigidbodies[i];
-                if (rb == null)
-                    continue;
-
                 rb.velocity = Vector3.zero;
                 rb.angularVelocity = Vector3.zero;
-                rb.isKinematic = !active;
             }
+            rb.detectCollisions = active;
         }
     }
 
     private void OnDestroy()
     {
         if (queue != null && registeredToQueue)
-        {
             queue.Remove(this);
-        }
+
+        if (prisonManager != null)
+            prisonManager.ReleaseOccupant(this);
 
         if (!generatorReleased && ownerGenerator != null)
         {

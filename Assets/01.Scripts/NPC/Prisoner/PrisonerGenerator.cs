@@ -12,8 +12,7 @@ public class PrisonerGenerator : MonoBehaviour
     [SerializeField] private Transform moneyDropPosition;
     [SerializeField] private ItemStorage moneyStorage;
     [SerializeField] private Carriable moneyPrefab;
-    [SerializeField] private Transform prisonGatePosition;
-    [SerializeField] private Transform prisonInsidePosition;
+    [SerializeField] private PrisonManager prisonManager;
 
     private float timer;
     private int aliveCount;
@@ -47,8 +46,7 @@ public class PrisonerGenerator : MonoBehaviour
 
         prisoner.Initialize(
             queue,
-            prisonGatePosition,
-            prisonInsidePosition,
+            prisonManager,
             moneyDropPosition,
             moneyStorage,
             moneyPrefab,

@@ -693,6 +693,7 @@ GameObject:
   - component: {fileID: 5287893881734123676}
   - component: {fileID: 1485890035633487313}
   - component: {fileID: 5122599490128587385}
+  - component: {fileID: 3203973422796584858}
   m_Layer: 0
   m_Name: Prisoner
   m_TagString: Untagged
@@ -744,14 +745,26 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   queue: {fileID: 0}
-  prisonGatePosition: {fileID: 0}
-  prisonInsidePosition: {fileID: 0}
+  prisonManager: {fileID: 0}
+  moneyDropPosition: {fileID: 0}
+  moneyStorage: {fileID: 0}
+  moneyPrefab: {fileID: 0}
   normalModels:
   - {fileID: 4502464456684629362}
   - {fileID: 4351998085021458627}
   - {fileID: 3914953988453601033}
   prisonerModel: {fileID: 3895280725143931768}
+  handoffTarget: {fileID: 0}
   handcuffDemand: 4
+  moneyReward: 1
+  moneyFlyDuration: 0.3
+  moneyFlyHeightCurve:
+    serializedVersion: 2
+    m_Curve: []
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  enableCollisionWhenPrisoned: 1
 --- !u!195 &5122599490128587385
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -774,6 +787,33 @@ NavMeshAgent:
   m_BaseOffset: 0
   m_WalkableMask: 4294967295
   m_ObstacleAvoidanceType: 4
+--- !u!54 &3203973422796584858
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5782608837324970690}
+  serializedVersion: 4
+  m_Mass: 1
+  m_Drag: 0
+  m_AngularDrag: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 1
+  m_Interpolate: 0
+  m_Constraints: 112
+  m_CollisionDetection: 0
 --- !u!1 &7174924952216821437
 GameObject:
   m_ObjectHideFlags: 0
