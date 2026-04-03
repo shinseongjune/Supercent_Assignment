@@ -10,6 +10,8 @@ public enum StorageLayoutType
 
 public class ItemStorage : MonoBehaviour
 {
+    [SerializeField] private StorageMaxPopupTarget popupTarget;
+
     [Header("Accept")]
     [SerializeField] private Carriable.Type acceptedType;
     [SerializeField] private int capacity = 10;
@@ -56,14 +58,20 @@ public class ItemStorage : MonoBehaviour
             case StorageLayoutType.Rect6Grid:
                 {
                     int cols = 3;
-                    int col = index % cols;
-                    int row = index / cols;
+                    int rows = 2;
+                    int perLayer = cols * rows;
 
-                    return new Vector3(
-                        (col - 1) * cellSpacing.x,
-                        0f,
-                        row * cellSpacing.z
-                    );
+                    int layer = index / perLayer;
+                    int indexInLayer = index % perLayer;
+
+                    int col = indexInLayer % cols;
+                    int row = indexInLayer / cols;
+
+                    float x = (col - 1) * cellSpacing.x;
+                    float y = layer * cellSpacing.y;
+                    float z = (row - 0.5f) * cellSpacing.z;
+
+                    return new Vector3(x, y, z);
                 }
         }
 
@@ -93,7 +101,13 @@ public class ItemStorage : MonoBehaviour
     public bool TryStore(Carriable item)
     {
         if (!CanStore(item))
+        {
+            if (popupTarget != null)
+            {
+                popupTarget.ShowIfFull();
+            }
             return false;
+        }
 
         storedItems.Add(item);
         RefreshLayout();

@@ -407,6 +407,8 @@ public class PrisonerAI : MonoBehaviour
         int picked = Random.Range(0, normalModels.Length);
         if (normalModels[picked] != null)
             normalModels[picked].SetActive(true);
+
+        movement.RefreshAnimator();
     }
 
     private void BecomePrisoner()
@@ -427,6 +429,8 @@ public class PrisonerAI : MonoBehaviour
 
         if (prisonerModel != null)
             prisonerModel.SetActive(true);
+
+        movement.RefreshAnimator();
     }
 
     private void LeaveQueueImmediately()
@@ -482,6 +486,9 @@ public class PrisonerAI : MonoBehaviour
             agent.ResetPath();
             agent.enabled = false;
         }
+
+        Animator animator = GetComponentInChildren<Animator>();
+        animator.SetFloat("Velocity", 0);
 
         SetPrisonRigidbodiesActive(true);
         enabled = false;

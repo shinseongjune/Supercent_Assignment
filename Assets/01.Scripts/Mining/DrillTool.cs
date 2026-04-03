@@ -5,6 +5,8 @@ public class DrillTool : MiningTool
     [SerializeField] private float mineInterval = 0.2f;
     [SerializeField] private int damage = 1;
 
+    [SerializeField] private AudioClip clip;
+
     private float timer;
 
     private void Update()
@@ -24,6 +26,10 @@ public class DrillTool : MiningTool
             return;
 
         timer = mineInterval;
+        if (clip != null)
+        {
+            AudioManager.Instance?.Play(clip);
+        }
         ore.TakeMineDamage(damage, owner);
     }
 

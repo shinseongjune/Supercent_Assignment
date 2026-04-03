@@ -1,5 +1,7 @@
+using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.UI;
 
 // 돈을 소모하는 장소
 public class MoneyConsumerZone : MonoBehaviour
@@ -8,6 +10,13 @@ public class MoneyConsumerZone : MonoBehaviour
     [SerializeField] private float consumeInterval = 0.1f;
     [SerializeField] private UnityEvent onCompleted;
 
+    [SerializeField] private TextMeshProUGUI moneyDemandText;
+
+    [SerializeField] private AudioClip consumeClip;
+    [SerializeField] private AudioClip upgradeClip;
+
+    [SerializeField] private Image fillBackground;
+
     private int currentValue;
     private float timer;
     private Inventory currentInventory;
@@ -15,7 +24,20 @@ public class MoneyConsumerZone : MonoBehaviour
 
     private void Update()
     {
-        if (completed || currentInventory == null)
+        if (completed) return;
+
+        if (moneyDemandText != null)
+        {
+            int demand = (targetCost - currentValue) * 5;
+            moneyDemandText.text = demand.ToString();
+        }
+
+        if (fillBackground != null)
+        {
+            fillBackground.fillAmount = (float)currentValue / targetCost;
+        }
+
+        if (currentInventory == null)
             return;
 
         timer -= Time.deltaTime;
@@ -36,8 +58,20 @@ public class MoneyConsumerZone : MonoBehaviour
 
         if (currentValue >= targetCost)
         {
+            if (upgradeClip != null)
+            {
+                AudioManager.Instance?.Play(upgradeClip);
+            }
+
             completed = true;
             onCompleted?.Invoke();
+        }
+        else
+        {
+            if (consumeClip != null)
+            {
+                AudioManager.Instance?.Play(consumeClip);
+            }
         }
     }
 

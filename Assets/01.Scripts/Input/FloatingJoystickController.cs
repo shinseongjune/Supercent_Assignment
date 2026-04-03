@@ -63,7 +63,7 @@ public class FloatingJoystickController : MonoBehaviour
         InputManager.Instance.OnUIInput += HandleInput;
 
         // GameManager가 생성될 때까지 대기
-        while (GameManager.Instance != null)
+        while (GameManager.Instance == null)
             yield return null;
 
         GameManager.Instance.OnInputModeChanged += HandleInputModeChanged;

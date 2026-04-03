@@ -6,6 +6,8 @@ public class MountedMiningTool : MiningTool
     [SerializeField] private int damage = 1;
     [SerializeField] private Animator animator;
 
+    [SerializeField] private AudioClip clip;
+
     private float timer;
 
     public override void BeginMining(MiningArea area)
@@ -45,6 +47,10 @@ public class MountedMiningTool : MiningTool
             return;
 
         timer = mineInterval;
+        if (clip != null)
+        {
+            AudioManager.Instance?.Play(clip);
+        }
         ore.TakeMineDamage(damage, owner);
     }
 }

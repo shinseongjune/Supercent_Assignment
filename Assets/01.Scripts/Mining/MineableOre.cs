@@ -17,6 +17,8 @@ public class MineableOre : MonoBehaviour
     [SerializeField] private GameObject visualRoot;
     [SerializeField] private Collider hitCollider;
 
+    [SerializeField] private AudioClip breakClip;
+
     private int currentHp;
     private bool isDepleted;
     private Coroutine respawnRoutine;
@@ -45,6 +47,10 @@ public class MineableOre : MonoBehaviour
         if (currentHp > 0)
             return true;
 
+        if (breakClip != null)
+        {
+            AudioManager.Instance?.Play(breakClip);
+        }
         BreakOreToMiner(miner);
         return true;
     }
@@ -68,6 +74,10 @@ public class MineableOre : MonoBehaviour
         if (currentHp > 0)
             return true;
 
+        if (breakClip != null)
+        {
+            AudioManager.Instance?.Play(breakClip);
+        }
         BreakOreToStorage(targetStorage);
         return true;
     }
@@ -144,7 +154,13 @@ public class MineableOre : MonoBehaviour
         for (int i = 0; i < dropCount; i++)
         {
             if (inventory.IsFull(orePrefab.type))
+            {
+                if (inventory.popupTarget != null)
+                {
+                    inventory.popupTarget.ShowIfFull();
+                }
                 return;
+            }
 
             Vector3 spawnPos = dropPoint != null ? dropPoint.position : miner.transform.position;
             Carriable spawned = Instantiate(orePrefab, spawnPos, Quaternion.identity);
@@ -204,6 +220,14 @@ public class MineableOre : MonoBehaviour
 
         if (hitCollider != null)
             hitCollider.enabled = false;
+    }
+
+    public Vector3 GetMinePoint(Vector3 from)
+    {
+        if (hitCollider != null)
+            return hitCollider.ClosestPoint(from);
+
+        return transform.position;
     }
 
 #if UNITY_EDITOR

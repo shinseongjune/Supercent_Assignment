@@ -62,7 +62,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
+  - {fileID: 2100000, guid: 6273bc7d7582b454bb26fd7b2f486d8c, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -159,3 +159,4 @@ MonoBehaviour:
   dropPoint: {fileID: 3679479638068315095}
   visualRoot: {fileID: 3072169600932589953}
   hitCollider: {fileID: 8444507181295900807}
+  breakClip: {fileID: 8300000, guid: 9fdbc992072f44e4686421e29dc6b4ca, type: 3}

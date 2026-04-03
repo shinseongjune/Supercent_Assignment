@@ -10,6 +10,10 @@ public class ItemCapacityEntry
 
 public class Inventory : MonoBehaviour
 {
+    public InventoryMaxPopupTarget popupTarget;
+
+    [SerializeField] private AudioClip takeClip;
+
     [Header("Pickup")]
     [SerializeField] private LayerMask carriableMask;
     [SerializeField] private float pickupRadius = 1.25f;
@@ -123,7 +127,9 @@ public class Inventory : MonoBehaviour
         }
 
         if (bestItem != null)
+        {
             Take(bestItem);
+        }
     }
 
     public bool CanTake(Carriable item)
@@ -138,7 +144,13 @@ public class Inventory : MonoBehaviour
             return false;
 
         if (IsFull(item.type))
+        {
+            if (popupTarget != null)
+            {
+                popupTarget.ShowIfFull();
+            }
             return false;
+        }
 
         return true;
     }
@@ -166,6 +178,11 @@ public class Inventory : MonoBehaviour
         insertionOrders[item] = orderCounter++;
         SortItems();
         RefreshCarryLayout(item);
+
+        if (takeClip != null)
+        {
+            AudioManager.Instance?.Play(takeClip);
+        }
         return true;
     }
 
@@ -178,6 +195,11 @@ public class Inventory : MonoBehaviour
         insertionOrders[item] = orderCounter++;
         SortItems();
         RefreshCarryLayout(item);
+
+        if (takeClip != null)
+        {
+            AudioManager.Instance?.Play(takeClip);
+        }
         return true;
     }
 
@@ -206,6 +228,11 @@ public class Inventory : MonoBehaviour
         items.RemoveAt(items.Count - 1);
         insertionOrders.Remove(releasedItem);
         RefreshCarryLayout();
+
+        if (takeClip != null)
+        {
+            AudioManager.Instance?.Play(takeClip);
+        }
         return true;
     }
 
@@ -222,6 +249,11 @@ public class Inventory : MonoBehaviour
             items.RemoveAt(i);
             insertionOrders.Remove(releasedItem);
             RefreshCarryLayout();
+
+            if (takeClip != null)
+            {
+                AudioManager.Instance?.Play(takeClip);
+            }
             return true;
         }
 

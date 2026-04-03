@@ -9,6 +9,13 @@ public class PrisonModelChanger : MonoBehaviour
     [SerializeField] private GameObject model1;
     [SerializeField] private GameObject model2;
 
+    [SerializeField] private Material redMat;
+
+    public void Event_ChangeCellColor()
+    {
+        model1.GetComponent<Renderer>().material = redMat;
+    }
+
     public void Event_ChangeModel()
     {
         model1.SetActive(false);

@@ -81,11 +81,15 @@ public class MiningWorkerAI : MonoBehaviour
         if (repathTimer <= 0f)
         {
             repathTimer = repathInterval;
-            movement.SetDestination(currentTarget.transform.position);
+            Vector3 targetPos = currentTarget.GetMinePoint(transform.position);
+            movement.SetDestination(targetPos);
         }
 
         Vector3 origin = mineOrigin != null ? mineOrigin.position : transform.position;
-        float distSq = (currentTarget.transform.position - origin).sqrMagnitude;
+        Vector3 targetPoint = currentTarget.GetMinePoint(origin);
+        Vector3 delta = targetPoint - origin;
+        delta.y = 0f;
+        float distSq = delta.sqrMagnitude;
 
         if (distSq <= mineRange * mineRange)
         {
@@ -104,11 +108,14 @@ public class MiningWorkerAI : MonoBehaviour
             return;
         }
 
-        if (targetOreStorage == null || targetOreStorage.IsFull)
+        if (targetOreStorage == null)
             return;
 
         Vector3 origin = mineOrigin != null ? mineOrigin.position : transform.position;
-        float distSq = (currentTarget.transform.position - origin).sqrMagnitude;
+        Vector3 targetPoint = currentTarget.GetMinePoint(origin);
+        Vector3 delta = targetPoint - origin;
+        delta.y = 0f;
+        float distSq = delta.sqrMagnitude;
 
         if (distSq > mineRange * mineRange)
         {
@@ -122,7 +129,10 @@ public class MiningWorkerAI : MonoBehaviour
 
         mineTimer = mineInterval;
 
-        animator?.SetTrigger("Mine");
-        currentTarget.TakeMineDamageToStorage(damage, targetOreStorage);
+        bool mined = currentTarget.TakeMineDamageToStorage(damage, targetOreStorage);
+        if (mined)
+        {
+            animator?.SetTrigger("Mine");
+        }
     }
 }

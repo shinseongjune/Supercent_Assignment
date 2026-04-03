@@ -6,6 +6,8 @@ public class PickaxeTool : MiningTool
     [SerializeField] private int damage = 1;
     [SerializeField] private Animator animator;
 
+    [SerializeField] private AudioClip clip;
+
     private float timer;
 
     private void Update()
@@ -27,6 +29,10 @@ public class PickaxeTool : MiningTool
         timer = mineInterval;
 
         animator?.SetTrigger("Mine");
+        if (clip != null)
+        {
+            AudioManager.Instance?.Play(clip);
+        }
         ore.TakeMineDamage(damage, owner);
     }
 

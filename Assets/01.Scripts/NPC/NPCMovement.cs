@@ -1,13 +1,32 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 
 public class NPCMovement : MonoBehaviour
 {
     private NavMeshAgent agent;
+    private Animator animator;
 
     private void Start()
     {
         agent = GetComponent<NavMeshAgent>();
+
+        RefreshAnimator();
+    }
+
+    private void Update()
+    {
+        if (animator != null)
+        {
+            if (agent.remainingDistance <= float.Epsilon)
+            {
+                animator.SetFloat("Velocity", 0);
+            }
+            else
+            {
+                animator.SetFloat("Velocity", 1);
+            }
+        }
     }
 
     public void SetDestination(Vector3 position)
@@ -44,5 +63,10 @@ public class NPCMovement : MonoBehaviour
             return;
 
         agent.ResetPath();
+    }
+
+    public void RefreshAnimator()
+    {
+        animator = GetComponentInChildren<Animator>();
     }
 }
