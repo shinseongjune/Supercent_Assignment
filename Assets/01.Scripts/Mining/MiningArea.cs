@@ -2,10 +2,7 @@ using UnityEngine;
 
 public class MiningArea : MonoBehaviour
 {
-    [SerializeField] private Transform seatPoint;
     [SerializeField] private MineableOre[] ores;
-
-    public Transform SeatPoint => seatPoint;
 
     public MineableOre FindBestOreInRange(Vector3 from, float range)
     {
@@ -45,5 +42,9 @@ public class MiningArea : MonoBehaviour
         PlayerMiningController mining = other.GetComponentInParent<PlayerMiningController>();
         if (mining != null)
             mining.ExitMiningArea(this);
+
+        Animator animator = other.transform.root.GetComponentInChildren<Animator>();
+        animator.CrossFade("Locomotion", 0.1f);
+        animator.ResetTrigger("Mine");
     }
 }

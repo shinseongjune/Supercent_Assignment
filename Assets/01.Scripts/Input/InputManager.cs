@@ -29,11 +29,11 @@ public class InputManager : MonoBehaviour
     private void Update()
     {
         InputFrame input = CollectInput();
-        UpdateIdle(input);
 
         switch (GameManager.Instance.CurrentInputMode)
         {
             case InputMode.Gameplay:
+                UpdateIdle(input);
                 RouteGameplay(input);
                 break;
 

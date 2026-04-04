@@ -25,11 +25,18 @@ public class PrisonManager : MonoBehaviour
     public Transform FrontPoint => frontPoint;
     public int Capacity => Mathf.Min(baseCapacity + addedCapacity, insideSlots != null ? insideSlots.Length : 0);
     public int OccupantCount => occupants.Count;
-    public bool IsFull => OccupantCount + reservedInsideSlots.Count >= Capacity;
+
+    // 실제로 꽉 찼는지: 콜백/표시용
+    public bool IsActuallyFull => OccupantCount >= Capacity;
+
+    // 예약까지 포함해서 더 받을 수 없는지: 슬롯 배정용
+    public bool IsReservationFull => OccupantCount + reservedInsideSlots.Count >= Capacity;
+
+    public bool IsFull => IsActuallyFull;
 
     public bool HasFreeCell()
     {
-        return !IsFull;
+        return !IsReservationFull;
     }
 
     public bool TryReserveInsideSlot(PrisonerAI prisoner, out Transform slot, out int slotIndex)
@@ -212,7 +219,7 @@ public class PrisonManager : MonoBehaviour
     {
         onPrisonStateChanged?.Invoke();
 
-        bool nowFull = IsFull && Capacity > 0;
+        bool nowFull = IsActuallyFull && Capacity > 0;
 
         if (nowFull && !notifiedFull)
         {

@@ -5,6 +5,11 @@ public class TutorialGuideController : MonoBehaviour
 {
     [SerializeField] private GameObject guideImage;
 
+    private void Awake()
+    {
+        Screen.SetResolution(720, 1280, false);
+    }
+
     private void OnEnable()
     {
         StartCoroutine(SubscribeWhenReady());

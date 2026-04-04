@@ -299,8 +299,6 @@ public class PrisonerAI : MonoBehaviour
             moneyTf.position = targetPos;
             moneyTf.rotation = targetRot;
             moneyStorage.TryStore(money);
-
-            yield return null;
         }
     }
 

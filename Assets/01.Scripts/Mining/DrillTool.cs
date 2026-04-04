@@ -33,6 +33,13 @@ public class DrillTool : MiningTool
         ore.TakeMineDamage(damage, owner);
     }
 
+    public override void OnEquip(PlayerMiningController controller)
+    {
+        base.OnEquip(controller);
+
+        controller.GetComponent<Inventory>().SetCapacity(Carriable.Type.Ore, 20);
+    }
+
     public override void BeginMining(MiningArea area)
     {
         base.BeginMining(area);

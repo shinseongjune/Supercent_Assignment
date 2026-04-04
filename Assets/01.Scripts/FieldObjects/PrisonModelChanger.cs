@@ -13,7 +13,11 @@ public class PrisonModelChanger : MonoBehaviour
 
     public void Event_ChangeCellColor()
     {
-        model1.GetComponent<Renderer>().material = redMat;
+        var models = model1.GetComponentsInChildren<Renderer>();
+        foreach (var model in models)
+        {
+            model.material = redMat;
+        }
     }
 
     public void Event_ChangeModel()

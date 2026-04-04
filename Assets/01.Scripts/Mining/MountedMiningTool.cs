@@ -10,15 +10,21 @@ public class MountedMiningTool : MiningTool
 
     private float timer;
 
+    public override void OnEquip(PlayerMiningController controller)
+    {
+        base.OnEquip(controller);
+
+        controller.GetComponent<Inventory>().SetCapacity(Carriable.Type.Ore, 35);
+    }
+
     public override void BeginMining(MiningArea area)
     {
         base.BeginMining(area);
         timer = 0f;
 
-        if (owner != null && area != null && area.SeatPoint != null)
+        if (owner != null && area != null)
         {
-            owner.transform.position = area.SeatPoint.position;
-            owner.transform.rotation = area.SeatPoint.rotation;
+            owner.transform.GetChild(0).transform.localPosition = new Vector3(0, 1, 0);
         }
 
         animator?.SetBool("IsMountedMining", true);
@@ -26,6 +32,10 @@ public class MountedMiningTool : MiningTool
 
     public override void EndMining()
     {
+        if (owner != null)
+        {
+            owner.transform.GetChild(0).transform.localPosition = Vector3.zero;
+        }
         animator?.SetBool("IsMountedMining", false);
         base.EndMining();
     }

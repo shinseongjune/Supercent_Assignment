@@ -78,8 +78,7 @@ public class TutorialSequenceController : MonoBehaviour
     {
         if (prisonManager != null)
         {
-            // 직접 Inspector에서 연결하는 방식이 더 안전하지만,
-            // 최소한의 자동 연결 여지도 남겨둠.
+            prisonManager = FindFirstObjectByType<PrisonManager>();
         }
     }
 
@@ -240,7 +239,7 @@ public class TutorialSequenceController : MonoBehaviour
 
         if (gameCamera != null && focusTarget != null)
         {
-            gameCamera.FocusTarget(focusTarget, cutsceneOffset);
+            gameCamera.FocusTarget(focusTarget);
         }
 
         yield return new WaitForSeconds(cutsceneFocusDuration);
@@ -267,7 +266,7 @@ public class TutorialSequenceController : MonoBehaviour
 
         if (gameCamera != null && prisonModelTarget != null)
         {
-            gameCamera.FocusTarget(prisonModelTarget, cutsceneOffset);
+            gameCamera.FocusTarget(prisonModelTarget);
         }
 
         yield return new WaitForSeconds(cutsceneFocusDuration);

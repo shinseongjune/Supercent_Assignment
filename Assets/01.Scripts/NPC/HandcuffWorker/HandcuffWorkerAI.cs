@@ -67,9 +67,16 @@ public class HandcuffWorkerAI : MonoBehaviour
     private bool MachineHasSupply =>
         machineOutputHandcuffStorage != null && !machineOutputHandcuffStorage.IsEmpty;
 
+    private bool HandoffHasSupply =>
+        handoffHandcuffStorage != null && !handoffHandcuffStorage.IsEmpty;
+
+    private bool ShouldStayAtHandoff =>
+        HasAnyHandcuff || HandoffHasSupply;
+
     private void UpdateGoToMachinePickup()
     {
-        if (HasAnyHandcuff)
+        // handoff 쪽에 아직 줄 수갑이 남아 있으면 handoff 우선
+        if (ShouldStayAtHandoff)
         {
             ChangeState(State.GoToHandoff);
             return;
@@ -98,19 +105,22 @@ public class HandcuffWorkerAI : MonoBehaviour
             return;
         }
 
-        if (HasAnyHandcuff && (IsHandcuffInventoryFull || !MachineHasSupply))
+        // 손에 들었거나 handoff에 재고가 생기면 handoff 우선
+        if (ShouldStayAtHandoff)
         {
             ChangeState(State.GoToHandoff);
             return;
         }
 
-        if (!HasAnyHandcuff && !MachineHasSupply)
+        // 더 이상 가져올 것도 없으면 handoff로 돌아가 대기
+        if (!MachineHasSupply)
         {
             ChangeState(State.GoToHandoff);
             return;
         }
 
-        if (HasAnyHandcuff && !MachineHasSupply)
+        // 아직 더 담을 수 있고 machine에도 남아 있으면 여기서 계속 대기
+        if (HasAnyHandcuff && IsHandcuffInventoryFull)
         {
             ChangeState(State.GoToHandoff);
             return;
@@ -119,13 +129,6 @@ public class HandcuffWorkerAI : MonoBehaviour
 
     private void UpdateGoToHandoff()
     {
-        // 들고 있으면 무조건 handoff 우선
-        if (!HasAnyHandcuff && MachineHasSupply)
-        {
-            ChangeState(State.GoToMachinePickup);
-            return;
-        }
-
         MoveRepeated(handoffPoint);
 
         if (HasArrived(handoffPoint))
@@ -143,18 +146,18 @@ public class HandcuffWorkerAI : MonoBehaviour
             return;
         }
 
-        // 아직 손에 들고 있으면 DepositZone이 처리할 때까지 대기
-        if (HasAnyHandcuff)
+        // 손에 있거나 handoff 저장소에 남아 있으면 계속 여기 대기
+        if (ShouldStayAtHandoff)
             return;
 
-        // 손에 아무것도 없고 machine 쪽에 수갑이 있으면 바로 가지러 감
+        // handoff 쪽이 완전히 비었을 때만 machine으로 복귀
         if (MachineHasSupply)
         {
             ChangeState(State.GoToMachinePickup);
             return;
         }
 
-        // 없으면 handoff에서 대기
+        // 둘 다 없으면 여기서 대기
     }
 
     private void ChangeState(State next)
